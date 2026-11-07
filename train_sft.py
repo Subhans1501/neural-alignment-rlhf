@@ -8,6 +8,7 @@ from common import (load_tokenizer, load_causal_lm, load_sft_splits, load_eval_p
                     collate_sft, token_logprobs, summary_mask, generate_summaries)
 
 
+# Task 2.2: SFT Loss = mean negative log-likelihood of the summary tokens only
 def sft_loss(model, b, device):
     ids, attn = b["input_ids"].to(device), b["attention_mask"].to(device)
     lp, sm = token_logprobs(model, ids, attn), summary_mask(attn, b["prompt_lens"])
@@ -31,10 +32,14 @@ def main():
     tr_loader = DataLoader(sft_train, 16, shuffle=True, collate_fn=partial(collate_sft, pad_id=tok.pad_token_id))
     va_loader = DataLoader(sft_val, 16, collate_fn=partial(collate_sft, pad_id=tok.pad_token_id))
 
+    # Task 2.1: Load the base model with load_causal_lm()
     model = load_causal_lm()
     device = next(model.parameters()).device
+
+    # Task 2.3: AdamW, lr = 5e-5, batch size 16, gradient-norm clipping at 1.0 (1 epoch over 20,000 pairs)
     opt = AdamW(model.parameters(), lr=5e-5)
 
+    # Task 2.5: Generate greedy summaries for 5 evaluation posts BEFORE SFT
     before, _ = generate_summaries(model, tok, eval_posts, batch_size=5)
     steps, tr_log, va_log, run_loss, t0 = [], [], [], 0.0, time.time()
     model.train()
@@ -47,17 +52,22 @@ def main():
         opt.step()
         run_loss += loss.item()
 
+        # Task 2.4: Every 250 steps log training loss and validation loss on the 500 SFT validation pairs
         if step % 250 == 0:
             tr_l, va_l = run_loss / 250, evaluate(model, va_loader, device)
             steps.append(step); tr_log.append(tr_l); va_log.append(va_l)
             print(f"Step {step:4d} | train: {tr_l:.4f} | val: {va_l:.4f}")
             run_loss = 0.0
 
+    # Task 2.4: Save the final model as checkpoints/sft/
     model.save_pretrained("checkpoints/sft"); tok.save_pretrained("checkpoints/sft")
+
+    # Task 2.5: Generate greedy summaries for 5 evaluation posts AFTER SFT
     after, _ = generate_summaries(model, tok, eval_posts, batch_size=5)
     for i in range(5):
         print(f"\n[{i}] Before: {before[i]}\n    After : {after[i]}\n    Ref   : {eval_posts[i]['summary']}")
 
+    # Section 4.5 (Figure 1): SFT training and validation loss plot
     plt.figure(figsize=(6, 4))
     plt.plot(steps, tr_log, "-o", label="Train"); plt.plot(steps, va_log, "-s", label="Val")
     plt.xlabel("Step"); plt.ylabel("Loss"); plt.title("SFT Loss"); plt.legend(); plt.tight_layout()

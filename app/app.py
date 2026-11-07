@@ -8,6 +8,7 @@ from common import load_tokenizer, load_causal_lm, generate_summaries
 from batching import collate_sft
 from train_reward import RewardModel
 
+# Task 8.1: Web interface where user pastes a post and sees SFT, PPO, and DPO summaries side by side with r_phi scores
 st.set_page_config(page_title="RLHF Summarizer (SFT vs PPO vs DPO)", layout="wide")
 st.title("Learning to Summarize from Human Feedback")
 st.caption("Side-by-side comparison of SFT, PPO, and DPO policies on SmolLM2-135M with Reward Model scores.")
@@ -51,4 +52,3 @@ if st.button("Generate Summaries", type="primary"):
             st.metric("Reward Score r_φ(x, y)", f"{score:+.4f}")
             st.info(sums[0].strip())
             st.caption(f"Length: {len(g_ids[0])} tokens")
-

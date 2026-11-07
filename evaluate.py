@@ -8,6 +8,7 @@ from batching import collate_sft
 from train_reward import RewardModel
 
 
+# Section 3.1: Compute Reward-model score r_phi(x, y), KL to SFT, and token Length on greedy summaries
 @torch.no_grad()
 def score_and_kl(policy, ref, rm, tok, posts, gen_ids, batch_size=16):
     device = next(policy.parameters()).device
@@ -28,11 +29,13 @@ def main():
     posts = load_eval_posts(tok)
     scorer = rouge_scorer.RougeScorer(["rougeL"], use_stemmer=True)
 
+    # Task 6 (Section 2.6): Load SFT, PPO, and DPO checkpoints + frozen Reward Model
     sft = load_causal_lm("checkpoints/sft").eval()
     dev = next(sft.parameters()).device
     rm = RewardModel.load("checkpoints/reward", "checkpoints/sft", device=dev).eval()
     models = {"SFT": sft, "PPO": load_causal_lm("checkpoints/ppo", device=dev).eval(), "DPO": load_causal_lm("checkpoints/dpo", device=dev).eval()}
 
+    # Task 6 & Section 3.1: Generate greedy summaries (at most 48 tokens) on 300 eval posts & compute metrics
     res, table = {}, {}
     for name, m in models.items():
         sums, g_ids = generate_summaries(m, tok, posts, 16, MAX_SUMMARY_TOKENS, do_sample=False)
@@ -40,6 +43,7 @@ def main():
         rg = [scorer.score(p["summary"].strip(), s.strip())["rougeL"].fmeasure for p, s in zip(posts, sums)]
         res[name] = {"sums": sums, "r": r, "kl": kl, "len": l, "rg": np.array(rg)}
 
+    # Section 4.3 (Table 3): Final comparison on 300 evaluation posts
     for name in ["SFT", "PPO", "DPO"]:
         d = res[name]
         win = None if name == "SFT" else float((d["r"] > res["SFT"]["r"]).mean())
@@ -48,6 +52,7 @@ def main():
                        "length": float(d["len"].mean()), "rouge_l": float(d["rg"].mean())}
         print(f"{name:4s} | r: {table[name]['mean_r']:+.4f} | win: {win if win else 0:.3f} | KL: {table[name]['kl_to_sft']:.4f} | len: {table[name]['length']:.2f} | ROUGE-L: {table[name]['rouge_l']:.4f}")
 
+    # Task 6: Save all summaries to results/eval_summaries.jsonl
     with open("results/eval_summaries.jsonl", "w", encoding="utf-8") as f:
         for i, p in enumerate(posts):
             f.write(json.dumps({"id": i, "prompt": p["prompt"], "reference": p["summary"],
@@ -56,6 +61,7 @@ def main():
     with open("results/table3_eval.json", "w") as f:
         json.dump(table, f, indent=2)
 
+    # Section 3.2 & 4.4 (Table 4): Take 30 evaluation posts (fixed seed) in blind random order -> results/human_eval.csv
     rng = random.Random(SEED)
     with open("results/human_eval.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)

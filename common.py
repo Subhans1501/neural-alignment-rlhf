@@ -12,18 +12,21 @@ from data import load_sft_splits, load_preference_splits, load_eval_posts
 from batching import collate_sft, collate_prompts
 
 
+# Task 1.3: Compute log pi(x_t | x_<t) for every position t >= 1, shape (B, L - 1)
 def token_logprobs(model, input_ids, attention_mask):
     logits = model(input_ids=input_ids, attention_mask=attention_mask).logits
     log_p = F.log_softmax(logits[:, :-1, :].float(), dim=-1)
     return log_p.gather(-1, input_ids[:, 1:].unsqueeze(-1)).squeeze(-1)
 
 
+# Task 1.3: Summary mask that is 1 strictly on summary tokens (not prompt, not padding), shape (B, L - 1)
 def summary_mask(attention_mask, prompt_lens):
     B, L = attention_mask.shape
     pos = torch.arange(1, L, device=attention_mask.device).unsqueeze(0)
     return ((pos >= prompt_lens.to(attention_mask.device).unsqueeze(1)) & (attention_mask[:, 1:] == 1)).float()
 
 
+# Generation helper used in Task 2.5 (SFT), Task 4.1 (PPO rollout), Task 6 (Eval), and Task 8.1 (App)
 @torch.no_grad()
 def generate_summaries(model, tok, posts, batch_size=16, max_new_tokens=MAX_SUMMARY_TOKENS,
                        do_sample=False, temperature=1.0, top_k=0, top_p=1.0):
@@ -44,6 +47,7 @@ def generate_summaries(model, tok, posts, batch_size=16, max_new_tokens=MAX_SUMM
 
 
 if __name__ == "__main__":
+    # Task 1.2: Report subset sizes and mean/max prompt & summary lengths for SFT train
     tok = load_tokenizer()
     sft_train, sft_val = load_sft_splits(tok)
     pref_train, pref_val = load_preference_splits(tok)
@@ -53,6 +57,7 @@ if __name__ == "__main__":
     print(f"SFT: {len(sft_train)}/{len(sft_val)} | Pref: {len(pref_train)}/{len(pref_val)} | Eval: {len(eval_posts)}")
     print(f"Prompt len (mean/max): {np.mean(p_lens):.2f}/{np.max(p_lens)} | Summary len (mean/max): {np.mean(s_lens):.2f}/{np.max(s_lens)}")
 
+    # Task 1.3 & Correctness Check (Section 3.3): Verify token_logprobs shapes and decoded summary_mask == 1
     model = load_causal_lm()
     dev = next(model.parameters()).device
     b = collate_sft(sft_train[:2], pad_id=tok.pad_token_id)
