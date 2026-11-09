@@ -2,9 +2,9 @@ import os, json, csv, random
 import numpy as np
 import torch
 from rouge_score import rouge_scorer
-from common import load_tokenizer, load_causal_lm, load_eval_posts, generate_summaries, token_logprobs, summary_mask
+from common import load_tokenizer, load_causal_lm, load_eval_posts, load_preference_splits, generate_summaries, token_logprobs, summary_mask
 from config import SEED, MAX_SUMMARY_TOKENS
-from batching import collate_sft
+from batching import collate_sft, collate_pref
 from train_reward import RewardModel
 
 
@@ -69,6 +69,35 @@ def main():
         for idx in rng.sample(range(len(posts)), 30):
             ord_k = ["SFT", "PPO", "DPO"]; rng.shuffle(ord_k)
             w.writerow([idx, posts[idx]["prompt"], *[res[k]["sums"][idx] for k in ord_k], *ord_k, "", ""])
+
+    # Task 7.1: Save 3 validation preference pairs that the reward model gets wrong (r_phi(x, y_w) <= r_phi(x, y_l))
+    _, pref_val = load_preference_splits(tok)
+    wrong_pairs = []
+    with torch.no_grad():
+        for item in pref_val:
+            b = collate_pref([item], pad_id=tok.pad_token_id)
+            rw = rm(b["chosen_ids"].to(dev), b["chosen_mask"].to(dev)).item()
+            rl = rm(b["rejected_ids"].to(dev), b["rejected_mask"].to(dev)).item()
+            if rw <= rl:
+                wrong_pairs.append({"prompt": item["prompt"], "chosen": item["chosen"], "rejected": item["rejected"], "r_chosen": rw, "r_rejected": rl})
+            if len(wrong_pairs) == 3:
+                break
+    with open("results/rm_errors.json", "w", encoding="utf-8") as f:
+        json.dump(wrong_pairs, f, indent=2)
+
+    # Section 4.6: Save 10 qualitative evaluation samples (best & worst RLHF vs SFT deltas) to results/samples.md
+    deltas = np.maximum(res["PPO"]["rg"], res["DPO"]["rg"]) - res["SFT"]["rg"]
+    order_idx = np.argsort(deltas)
+    pick_10 = list(order_idx[-5:][::-1]) + list(order_idx[:5])
+    with open("results/samples.md", "w", encoding="utf-8") as f:
+        f.write("# Qualitative Samples (10 Evaluation Posts)\n\n")
+        for rank, i in enumerate(pick_10, 1):
+            tag = "PPO/DPO Better than SFT" if rank <= 5 else "PPO/DPO Worse than SFT"
+            f.write(f"## Sample {rank} (Post #{i} — {tag})\n\n**Prompt:**\n```text\n{posts[i]['prompt']}\n```\n")
+            f.write(f"- **Human Reference:** {posts[i]['summary'].strip()}\n")
+            for k in ["SFT", "PPO", "DPO"]:
+                f.write(f"- **{k}** ($r_\\phi = {res[k]['r'][i]:+.3f}$, ROUGE-L = {res[k]['rg'][i]:.3f}): {res[k]['sums'][i].strip()}\n")
+            f.write("\n---\n\n")
 
 
 if __name__ == "__main__":
