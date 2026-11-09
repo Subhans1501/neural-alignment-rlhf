@@ -63,19 +63,23 @@ def main():
 
     for step, b in enumerate(tr_loader, 1):
         opt.zero_grad()
-        r_w = rm(b["chosen_ids"].to(device), b["chosen_mask"].to(device))
-        r_l = rm(b["rejected_ids"].to(device), b["rejected_mask"].to(device))
-        # Task 3.2: Bradley-Terry loss L_reward(phi) = -E[ log sigma(r_phi(x, y_w) - r_phi(x, y_l)) ]
-        loss = -F.logsigmoid(r_w - r_l).mean()
-        loss.backward()
+        step_loss = 0.0
+        # Process 8 preference pairs in 2 halves of 4 pairs to fit T4 VRAM
+        for sl in [slice(0, 4), slice(4, 8)]:
+            r_w = rm(b["chosen_ids"][sl].to(device), b["chosen_mask"][sl].to(device))
+            r_l = rm(b["rejected_ids"][sl].to(device), b["rejected_mask"][sl].to(device))
+            # Task 3.2: Bradley-Terry loss L_reward(phi) = -E[ log sigma(r_phi(x, y_w) - r_phi(x, y_l)) ]
+            loss_half = -F.logsigmoid(r_w - r_l).mean() * 0.5
+            loss_half.backward()
+            step_loss += loss_half.item()
         torch.nn.utils.clip_grad_norm_(rm.parameters(), 1.0)
         opt.step()
-        run_loss += loss.item()
+        run_loss += step_loss
 
         if step % 250 == 0:
             tr_l, acc = run_loss / 250, evaluate_rm(rm, va_loader, device)
             steps.append(step); tr_log.append(tr_l); acc_log.append(acc)
-            print(f"Step {step:4d} | loss: {tr_l:.4f} | val_acc: {acc:.4f}")
+            print(f"Step {step:4d} | loss: {tr_l:.4f} | val_acc: {acc:.4f} | {time.time()-t0:.1f}s")
             run_loss = 0.0
 
     # Task 3.4: Save as checkpoints/reward/
