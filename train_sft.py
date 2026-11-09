@@ -30,7 +30,7 @@ def main():
     eval_posts = load_eval_posts(tok)[:5]
 
     tr_loader = DataLoader(sft_train, 16, shuffle=True, collate_fn=partial(collate_sft, pad_id=tok.pad_token_id))
-    va_loader = DataLoader(sft_val, 16, collate_fn=partial(collate_sft, pad_id=tok.pad_token_id))
+    va_loader = DataLoader(sft_val, 8, collate_fn=partial(collate_sft, pad_id=tok.pad_token_id))
 
     # Task 2.1: Load the base model with load_causal_lm()
     model = load_causal_lm()
@@ -46,17 +46,25 @@ def main():
 
     for step, b in enumerate(tr_loader, 1):
         opt.zero_grad()
-        loss = sft_loss(model, b, device)
-        loss.backward()
+        ids, attn, pl = b["input_ids"].to(device), b["attention_mask"].to(device), b["prompt_lens"]
+        sm_full = summary_mask(attn, pl)
+        denom = sm_full.sum()
+        # Process batch of 16 in two halves of 8 to fit T4 GPU memory (exact same gradient)
+        step_loss = 0.0
+        for sl in [slice(0, 8), slice(8, 16)]:
+            lp = token_logprobs(model, ids[sl], attn[sl])
+            loss_half = -(lp * sm_full[sl]).sum() / denom
+            loss_half.backward()
+            step_loss += loss_half.item()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         opt.step()
-        run_loss += loss.item()
+        run_loss += step_loss
 
         # Task 2.4: Every 250 steps log training loss and validation loss on the 500 SFT validation pairs
         if step % 250 == 0:
             tr_l, va_l = run_loss / 250, evaluate(model, va_loader, device)
             steps.append(step); tr_log.append(tr_l); va_log.append(va_l)
-            print(f"Step {step:4d} | train: {tr_l:.4f} | val: {va_l:.4f}")
+            print(f"Step {step:4d} | train: {tr_l:.4f} | val: {va_l:.4f} | {time.time()-t0:.1f}s")
             run_loss = 0.0
 
     # Task 2.4: Save the final model as checkpoints/sft/

@@ -14,9 +14,8 @@ from batching import collate_sft, collate_prompts
 
 # Task 1.3: Compute log pi(x_t | x_<t) for every position t >= 1, shape (B, L - 1)
 def token_logprobs(model, input_ids, attention_mask):
-    logits = model(input_ids=input_ids, attention_mask=attention_mask).logits
-    log_p = F.log_softmax(logits[:, :-1, :].float(), dim=-1)
-    return log_p.gather(-1, input_ids[:, 1:].unsqueeze(-1)).squeeze(-1)
+    logits = model(input_ids=input_ids, attention_mask=attention_mask).logits[:, :-1, :]
+    return -F.cross_entropy(logits.reshape(-1, logits.size(-1)), input_ids[:, 1:].reshape(-1), reduction="none").view(input_ids.size(0), -1)
 
 
 # Task 1.3: Summary mask that is 1 strictly on summary tokens (not prompt, not padding), shape (B, L - 1)
@@ -34,11 +33,13 @@ def generate_summaries(model, tok, posts, batch_size=16, max_new_tokens=MAX_SUMM
     device = next(model.parameters()).device
     loader = DataLoader(posts, batch_size=batch_size, collate_fn=partial(collate_prompts, pad_id=tok.pad_token_id))
     summaries, all_ids = [], []
+    kw = {"max_new_tokens": max_new_tokens, "do_sample": do_sample,
+          "pad_token_id": tok.pad_token_id, "eos_token_id": tok.eos_token_id}
+    if do_sample:
+        kw.update({"temperature": temperature, "top_k": top_k, "top_p": top_p})
     for b in loader:
         ids, mask = b["input_ids"].to(device), b["attention_mask"].to(device)
-        out = model.generate(ids, attention_mask=mask, max_new_tokens=max_new_tokens,
-                             do_sample=do_sample, temperature=temperature, top_k=top_k, top_p=top_p,
-                             pad_token_id=tok.pad_token_id, eos_token_id=tok.eos_token_id)
+        out = model.generate(ids, attention_mask=mask, **kw)
         for row in out[:, ids.shape[1]:].tolist():
             cut = row[:row.index(tok.eos_token_id) + 1] if tok.eos_token_id in row else row
             all_ids.append(cut)

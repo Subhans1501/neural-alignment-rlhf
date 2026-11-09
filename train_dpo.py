@@ -17,9 +17,9 @@ def seq_logprob(model, ids, mask, prompt_lens):
 # Task 5.3 & 5.5: DPO loss (Eq. 60) with beta = 0.1 and implicit reward accuracy (fraction where inside sigma(.) > 0)
 def dpo_step(policy, ref, b, device, beta=0.1):
     c_ids, c_m, r_ids, r_m, p_l = b["chosen_ids"].to(device), b["chosen_mask"].to(device), b["rejected_ids"].to(device), b["rejected_mask"].to(device), b["prompt_lens"].to(device)
-    pi_w, pi_l = seq_logprob(policy, c_ids, c_m, p_l), seq_logprob(policy, r_ids, r_m, p_l)
     with torch.no_grad():
         ref_w, ref_l = seq_logprob(ref, c_ids, c_m, p_l), seq_logprob(ref, r_ids, r_m, p_l)
+    pi_w, pi_l = seq_logprob(policy, c_ids, c_m, p_l), seq_logprob(policy, r_ids, r_m, p_l)
     logits = beta * ((pi_w - ref_w) - (pi_l - ref_l))
     return -F.logsigmoid(logits).mean(), (logits > 0).float().mean().item(), logits.size(0)
 
@@ -53,20 +53,25 @@ def main():
 
     for step, b in enumerate(tr_loader, 1):
         opt.zero_grad()
-        loss, _, _ = dpo_step(policy, ref, b, device)
+        # Process batch of 8 pairs in 2 halves of 4 pairs to keep T4 VRAM low
+        step_loss = 0.0
+        for sl in [slice(0, 4), slice(4, 8)]:
+            sub = {k: v[sl] for k, v in b.items()}
+            loss_half, _, _ = dpo_step(policy, ref, sub, device)
+            (loss_half * 0.5).backward()
+            step_loss += loss_half.item() * 0.5
         if step == 1:
             # Section 3.3 Correctness Check: First step loss equals log 2 approx 0.6931
-            print(f"Step 1 DPO loss: {loss.item():.4f} (expected 0.6931)")
-        loss.backward()
+            print(f"Step 1 DPO loss: {step_loss:.4f} (expected 0.6931)")
         torch.nn.utils.clip_grad_norm_(policy.parameters(), 1.0)
         opt.step()
-        run_loss += loss.item()
+        run_loss += step_loss
 
         # Task 5.5: Every 250 steps log loss and implicit reward accuracy on 1,000 validation pairs
         if step % 250 == 0:
             tr_l, acc = run_loss / 250, evaluate_dpo(policy, ref, va_loader, device)
             steps.append(step); tr_log.append(tr_l); acc_log.append(acc)
-            print(f"Step {step:4d} | loss: {tr_l:.4f} | implicit_acc: {acc:.4f}")
+            print(f"Step {step:4d} | loss: {tr_l:.4f} | implicit_acc: {acc:.4f} | {time.time()-t0:.1f}s")
             run_loss = 0.0
 
     # Task 5.5: Save as checkpoints/dpo/

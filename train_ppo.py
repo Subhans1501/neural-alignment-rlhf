@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.optim import AdamW
-from common import load_tokenizer, load_causal_lm, load_sft_splits, generate_summaries, summary_mask
+from common import load_tokenizer, load_causal_lm, load_sft_splits, generate_summaries, summary_mask, token_logprobs
 from config import SEED, MAX_SUMMARY_TOKENS
 from batching import collate_sft
 from train_reward import RewardModel
@@ -18,11 +18,13 @@ class ActorCritic(nn.Module):
         self.value_head = nn.Linear(self.policy.config.hidden_size, 1).to(next(self.policy.parameters()).device)
 
     def forward_pass(self, input_ids, attention_mask):
-        out = self.policy(input_ids=input_ids, attention_mask=attention_mask, output_hidden_states=True)
-        log_p = F.log_softmax(out.logits[:, :-1, :].float(), dim=-1)
-        lp = log_p.gather(-1, input_ids[:, 1:].unsqueeze(-1)).squeeze(-1)
+        out = self.policy.model(input_ids=input_ids, attention_mask=attention_mask)
+        h = out.last_hidden_state
+        logits = self.policy.lm_head(h)[:, :-1, :]
         # Task 4.2: Read V(s_t) from the same position whose logits predict a_t (just before a_t)
-        val = self.value_head(out.hidden_states[-1][:, :-1, :].float()).squeeze(-1)
+        val = self.value_head(h[:, :-1, :].float()).squeeze(-1)
+        log_p = F.log_softmax(logits.float(), dim=-1)
+        lp = log_p.gather(-1, input_ids[:, 1:].unsqueeze(-1)).squeeze(-1)
         ent = -(log_p.exp() * log_p).sum(dim=-1)
         return lp, val, ent
 
@@ -58,7 +60,7 @@ def main():
         # Task 4.2 Store (no gradients): log pi_theta_old(a_t|s_t), log pi_ref(a_t|s_t), V_theta_old(s_t), and r_phi(x, y)
         with torch.no_grad():
             old_lp, old_val, _ = ac.forward_pass(ids, attn)
-            ref_lp = F.log_softmax(ref(ids, attention_mask=attn).logits[:, :-1, :].float(), -1).gather(-1, ids[:, 1:].unsqueeze(-1)).squeeze(-1)
+            ref_lp = token_logprobs(ref, ids, attn)
             scores = rm(ids, attn)
 
         # Task 4.3 Per-token reward: r_t = -beta_kl * (log pi_old - log pi_ref) + 1[t == T] * r_phi(x, y)
