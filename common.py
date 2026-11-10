@@ -7,7 +7,12 @@ import torch.nn.functional as F
 from functools import partial
 from torch.utils.data import DataLoader
 from config import MAX_SUMMARY_TOKENS
-from models import load_tokenizer, load_causal_lm
+from models import load_tokenizer, load_causal_lm as _load_lm
+
+
+# SmolLM2 loads in bfloat16; bf16 weights silently drop tiny AdamW updates (lr 1e-5), so train in float32
+def load_causal_lm(name_or_path=None, device=None):
+    return _load_lm(name_or_path, device).float() if name_or_path else _load_lm(device=device).float()
 from data import load_sft_splits, load_preference_splits, load_eval_posts
 from batching import collate_sft, collate_prompts
 

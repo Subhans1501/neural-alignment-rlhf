@@ -67,7 +67,7 @@ def update_readme_md(sft_log, reward_log, ppo_log, dpo_log, table3):
     )
 
     t2_pattern = r"\| Stage \| Final train loss \| Validation metric \| Time / GPU \|[\s\S]*?\| DPO \|.*\|"
-    content = re.sub(t2_pattern, t2_replacement, content)
+    content = re.sub(t2_pattern, lambda m: t2_replacement, content)
 
     # Build Table 3 if table3_eval.json exists
     if table3:
@@ -87,7 +87,7 @@ def update_readme_md(sft_log, reward_log, ppo_log, dpo_log, table3):
                 "|---|---|---|---|---|---|\n" + "\n".join(t3_rows)
             )
             t3_pattern = r"\| Policy \| Mean \$r_\\phi\$ \| Win rate vs\. SFT \| KL to SFT \| Length \| ROUGE-L \|[\s\S]*?\| DPO \|.*\|"
-            content = re.sub(t3_pattern, t3_replacement, content)
+            content = re.sub(t3_pattern, lambda m: t3_replacement, content)
 
     with open(readme_path, "w", encoding="utf-8") as f:
         f.write(content)
@@ -106,3 +106,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
