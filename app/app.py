@@ -1,9 +1,11 @@
 import os, sys
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, ROOT_DIR)
+sys.path.insert(0, os.path.join(ROOT_DIR, "starter"))
 
 import streamlit as st
 import torch
-from starter.data import clean_post
+from data import clean_post
 from common import load_tokenizer, load_causal_lm, generate_summaries
 from batching import collate_sft
 from train_reward import RewardModel

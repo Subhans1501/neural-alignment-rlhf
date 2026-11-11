@@ -1,0 +1,38 @@
+{
+  "steps": [
+    250,
+    500,
+    750,
+    1000,
+    1250
+  ],
+  "train": [
+    2.5170631546974183,
+    2.479325532197952,
+    2.4445624210834502,
+    2.449108723640442,
+    2.416702064037323
+  ],
+  "val": [
+    2.493828981641739,
+    2.4753880084507047,
+    2.4639761334373835,
+    2.456043555623009,
+    2.449243157628983
+  ],
+  "time": 4355.920475482941,
+  "before": [
+    " I'm not going to tell him I'm sorry, I'm not going to tell him I'm sorry, I'm not going to tell him I'm sorry, I'm not going to tell him I'm sorry, I'm not going",
+    " I'm not sure if I should ask her to be my girlfriend or not.\n\nI'm not sure if I should ask her to be my girlfriend.\n\nI'm not sure if I should ask her to be my girlfriend.",
+    " I am not able to love her anymore.\n\nI am not able to love her anymore.\n\nI am not able to love her anymore.\n\nI am not able to love her anymore.\n\nI am not able",
+    " I'm not sure what to do. I'm not sure if I should keep my savings account or not. I'm not sure if I should keep my credit card or not. I'm not sure if I should keep my checking account or",
+    " I am not sure if I should hold out or not. I am not sure if I should be able to talk to her again.\n\nI am not sure if I should be able to talk to her again. I am not sure"
+  ],
+  "after": [
+    " boyfriend said hurtful things to me, I'm petrified to tell him what he said, I want to hurt the way he hurt me, what should I do?",
+    " I've been assured that a girl has the same feeling I have, is it alright to just ask her to be my girlfriend?",
+    " ex-girlfriend broke up with me because she cant love. I dont know if she is able to love or not.",
+    " I'm banking with BoA and want to close my checking account with them. What are the pros/cons of credit unions and Charles Schwab?",
+    " GF broke up with me, we have a holiday booked, should I hold out?"
+  ]
+}

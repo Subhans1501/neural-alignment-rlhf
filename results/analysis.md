@@ -7,7 +7,42 @@
   2. **Subtle factual reversals / negations**: Pairs where `chosen` and `rejected` share high lexical overlap with the post (e.g., *"I broke up with my boyfriend because..."* vs. *"My boyfriend broke up with me because..."*) often fool a 135M backbone.
   3. **Sarcasm or noisy human labels**: In Reddit `r/relationships` or `r/tifu` posts, human annotators occasionally disagree on whether a witty/ironic summary is better than a dry literal one.
 
-*(After running `evaluate.py` on Kaggle, paste 3 concrete misclassified `(prompt, chosen, rejected, r_w, r_l)` examples from `pref_val` here.)*
+### Three Concrete Misclassified Validation Pairs:
+
+**Example 1:**
+- **Post Prompt:**
+```text
+he internet. 
+
+What do you tell yourself when your sig other looks at these types of things? What advice can you give me on this? He always gets really defensive when I have issues about these things so I didn't know where else to go for help.
+TL;DR:
+```
+- **Human Chosen ($r_\phi = +0.087$):** I'm having a hard time dealing with bf watching porn, and need advice on what to do.
+- **Human Rejected ($r_\phi = +0.113$):** Bf watches porn, I'm trying to be okay with it, what do I tell myself?
+- **Why RM failed:** The rejected summary received a higher score (+0.113 > +0.087) likely due to surface-level lexical similarity or length bias.
+
+**Example 2:**
+- **Post Prompt:**
+```text
+
+Anyways there are 2 days left in the vacation and I dont know what to do right now. Its the morning after so we need to see them soon. Obviously we need to talk as a group, but I really dont know what to do if the host continues his attitude.
+TL;DR:
+```
+- **Human Chosen ($r_\phi = +0.135$):** friends played an incredibly cruel prank on me and my boyfriend, the host doesnt seem remorseful or apologize despite clearly knowing it was wrong. need advice on what to say and how to approach this situation.
+- **Human Rejected ($r_\phi = +0.203$):** My friends played an incredibly cruel joke on me and my boyfriend, and the entire group seem to be completely unrepentant and refusing to apologize for it. What are our next steps?
+- **Why RM failed:** The rejected summary received a higher score (+0.203 > +0.135) likely due to surface-level lexical similarity or length bias.
+
+**Example 3:**
+- **Post Prompt:**
+```text
+lly don't want to respond. I know a lot of people on Reddit believe that's unfair and will tell me to "woman up" but I don't trust myself. I need help and I need to get away from him. I love him but he's toxic. He's toxic to me and I need out.
+TL;DR:
+```
+- **Human Chosen ($r_\phi = +0.806$):** Is it ever okay to not officially end things? emotionally abusive LDR. When is it okay to just stop responding?
+- **Human Rejected ($r_\phi = +0.824$):** Me [23f] with [23m] 2.5 years LD. In what circumstances is it acceptable to go dark?
+- **Why RM failed:** The rejected summary received a higher score (+0.824 > +0.806) likely due to surface-level lexical similarity or length bias.
+
+
 
 ---
 

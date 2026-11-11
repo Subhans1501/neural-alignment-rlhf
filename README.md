@@ -68,17 +68,40 @@ Verified output from our implementation:
 
 | Stage | Final train loss | Validation metric | Time / GPU |
 |---|---|---|---|
-| SFT | see `results/sft_log.json` | val. loss: see `results/sft_log.json` | Tesla T4 |
-| Reward model | see `results/reward_log.json` | pairwise acc.: see `results/reward_log.json` | Tesla T4 |
-| PPO | see `results/ppo_log.json` | final mean $r_\phi$: see `results/ppo_log.json` | Tesla T4 |
-| DPO | see `results/dpo_log.json` | implicit reward acc.: see `results/dpo_log.json` | Tesla T4 |
+| SFT | 2.4167 | val. loss: 2.4492 | 72.6 min / T4 |
+| Reward model | 0.6921 | pairwise acc.: 52.0% | 130.0 min / T4 |
+| PPO | -0.0010 | final mean $r_\phi$: +0.461 | 67.9 min / T4 |
+| DPO | 0.6919 | implicit reward acc.: 49.4% | 232.9 min / T4 |
 
 ### Table 3 — Final Comparison (300 Evaluation Posts)
 *(Populated by `python evaluate.py` -> `results/table3_eval.json`)*
 
 | Policy | Mean $r_\phi$ | Win rate vs. SFT | KL to SFT | Length | ROUGE-L |
 |---|---|---|---|---|---|
-| SFT | — | — | 0 | — | — |
-| PPO | — | — | — | — | — |
-| DPO | — | — | — | — | — |
+| SFT | +0.4093 | — | 0.0000 | 31.46 | 0.2534 |
+| PPO | +0.4344 | 34.0% | -0.4398 | 28.09 | 0.2501 |
+| DPO | +0.4010 | 18.3% | 0.0311 | 31.83 | 0.2533 |
+
+### Table 4 — Human Evaluation (30 Posts)
+*(From blind randomized human evaluation sheet `results/human_eval.csv`)*
+
+| Evaluator | SFT picked | PPO picked | DPO picked |
+|---|---|---|---|
+| **Member 1** | 1 | 26 | 3 |
+| **Member 2** | 2 | 19 | 9 |
+
+**Agreement between members:** 22 / 30 (**73.3%**) — consistent with human annotator agreement reported in Stiennon et al. (2020).
+
+## Training Figures & Curves
+
+1. **Figure 1 — SFT Loss:** `results/sft_loss.png`
+2. **Figure 2 — Reward Model Curve:** `results/reward_curve.png`
+3. **Figure 3 — PPO Training Dynamics:** `results/ppo_curves.png`
+4. **Figure 4 — DPO Training Curve:** `results/dpo_curve.png`
+
+## Qualitative Samples & Analysis
+- **Task 4.6 (10 Qualitative Samples):** Complete side-by-side prompt and generation breakdown in [`results/samples.md`](results/samples.md).
+- **Task 7 (Analysis Questions 7.1–7.6):** Detailed mathematical answers, failure analysis, and viva reference in [`results/analysis.md`](results/analysis.md).
+- **Task 8.2 & 8.3 (Blog & LinkedIn Post):** Technical article and announcement post in [`results/blog_and_linkedin.md`](results/blog_and_linkedin.md).
+
 
