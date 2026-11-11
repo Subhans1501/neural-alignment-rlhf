@@ -21,120 +21,34 @@ st.set_page_config(
 )
 
 # -----------------------------------------------------------------------------
-# Custom CSS for Modern, Premium Dark/Light Aesthetic
+# Custom Styling
 # -----------------------------------------------------------------------------
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    
     html, body, [class*="css"] {
         font-family: 'Inter', sans-serif;
     }
-
-    .hero-header {
-        background: linear-gradient(135deg, #1E1E2E 0%, #2A2A40 50%, #1B2838 100%);
-        padding: 2.2rem 2.5rem;
-        border-radius: 16px;
-        color: white;
-        margin-bottom: 2rem;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+    .hero-box {
+        background: linear-gradient(135deg, #1e1e2f 0%, #25283d 100%);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 14px;
+        padding: 24px 28px;
+        margin-bottom: 24px;
     }
-
     .hero-title {
-        font-size: 2.2rem;
+        font-size: 28px;
         font-weight: 700;
         margin: 0;
-        background: linear-gradient(90deg, #60A5FA, #A78BFA, #34D399);
+        background: linear-gradient(90deg, #60a5fa, #a78bfa, #34d399);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
-
-    .hero-subtitle {
-        font-size: 1.05rem;
-        color: #D1D5DB;
-        margin-top: 0.5rem;
+    .hero-sub {
+        font-size: 14px;
+        color: #9ca3af;
+        margin-top: 6px;
         margin-bottom: 0;
-    }
-
-    .policy-card {
-        background: rgba(255, 255, 255, 0.04);
-        border-radius: 14px;
-        padding: 1.4rem;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .policy-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-    }
-
-    .badge-sft {
-        background-color: #2563EB;
-        color: white;
-        padding: 4px 10px;
-        border-radius: 8px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        display: inline-block;
-    }
-
-    .badge-ppo {
-        background-color: #059669;
-        color: white;
-        padding: 4px 10px;
-        border-radius: 8px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        display: inline-block;
-    }
-
-    .badge-dpo {
-        background-color: #7C3AED;
-        color: white;
-        padding: 4px 10px;
-        border-radius: 8px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        display: inline-block;
-    }
-
-    .winner-pill {
-        background: linear-gradient(90deg, #F59E0B, #D97706);
-        color: white;
-        font-size: 0.72rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        padding: 3px 8px;
-        border-radius: 6px;
-        float: right;
-        letter-spacing: 0.5px;
-    }
-
-    .summary-box {
-        background: rgba(0, 0, 0, 0.18);
-        border-left: 4px solid #6366F1;
-        padding: 1rem;
-        border-radius: 8px;
-        margin: 1rem 0;
-        font-size: 0.98rem;
-        line-height: 1.5;
-        min-height: 100px;
-    }
-
-    .metric-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 0.5rem;
-        padding-top: 0.75rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-        font-size: 0.88rem;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -186,9 +100,9 @@ PRESETS = {
 # Hero Banner
 # -----------------------------------------------------------------------------
 st.markdown("""
-<div class="hero-header">
+<div class="hero-box">
     <div class="hero-title">⚖️ Learning to Summarize from Human Feedback</div>
-    <div class="hero-subtitle">Interactive comparison of <b>Supervised Fine-Tuning (SFT)</b>, <b>Proximal Policy Optimization (PPO)</b>, and <b>Direct Preference Optimization (DPO)</b> on <i>SmolLM2-135M</i> scored by a Bradley–Terry Reward Model.</div>
+    <div class="hero-sub">Empirical side-by-side comparison of <b>SFT</b>, <b>PPO</b>, and <b>DPO</b> policies on <i>SmolLM2-135M</i> scored live with a learned Bradley–Terry Reward Model.</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -207,7 +121,7 @@ with st.sidebar:
     | **Human Picks** | 2 / 30 | **26 / 30** | 3 / 30 |
     """)
     st.caption("Human agreement rate: **73.3%** across 30 blind evaluation posts.")
-    st.markdown("---")
+    st.divider()
     st.markdown("### 🛠️ Architecture")
     st.markdown("""
     - **Base LM:** `SmolLM2-135M`
@@ -215,13 +129,13 @@ with st.sidebar:
     - **RLHF Recipe:** Stiennon et al. (2020)
     - **Pure PyTorch:** No `trl` / `Trainer`
     """)
-    st.markdown("---")
+    st.divider()
     st.markdown("[🔗 GitHub Repository](https://github.com/Subhans1501/neural-alignment-rlhf)")
 
 # -----------------------------------------------------------------------------
 # Main Input Section
 # -----------------------------------------------------------------------------
-col_sel, col_empty = st.columns([2, 1])
+col_sel, _ = st.columns([2, 1])
 with col_sel:
     preset_choice = st.selectbox("🎯 Choose a preset example or enter custom text below:", ["Custom Post"] + list(PRESETS.keys()))
 
@@ -230,7 +144,7 @@ if preset_choice != "Custom Post":
 else:
     initial_text = PRESETS[list(PRESETS.keys())[0]]
 
-raw_post = st.text_area("Reddit Post (Subreddit / Title / Body):", value=initial_text, height=160)
+raw_post = st.text_area("Reddit Post (Subreddit / Title / Body):", value=initial_text, height=150)
 
 btn_generate = st.button("✨ Align & Generate Summaries", type="primary", use_container_width=True)
 
@@ -256,59 +170,60 @@ if btn_generate:
                 "length": len(g_ids[0]),
             }
 
-        # Find best scoring policy
+        # Identify policy with highest reward score
         best_policy = max(results, key=lambda k: results[k]["score"])
 
     st.markdown("### 📑 Policy Comparison & Alignment Scores")
     cols = st.columns(3)
 
-    badges = {
-        "SFT": ("badge-sft", "Stage 1: Supervised Baseline"),
-        "PPO": ("badge-ppo", "Stage 3: Online RLHF"),
-        "DPO": ("badge-dpo", "Stage 4: Direct Preference"),
+    policy_meta = {
+        "SFT": {"desc": "Stage 1: Supervised Baseline", "color": "blue"},
+        "PPO": {"desc": "Stage 3: Online RLHF", "color": "green"},
+        "DPO": {"desc": "Stage 4: Direct Preference", "color": "violet"},
     }
 
     for col, (name, d) in zip(cols, results.items()):
-        badge_cls, badge_desc = badges[name]
+        meta = policy_meta[name]
         is_winner = (name == best_policy)
-        winner_html = '<span class="winner-pill">🏆 Top Reward</span>' if is_winner else ""
-        border_color = "#10B981" if is_winner else "rgba(255, 255, 255, 0.1)"
-
         delta_sft = d["score"] - results["SFT"]["score"]
-        delta_str = f"({delta_sft:+.3f} vs SFT)" if name != "SFT" else "(baseline)"
 
         with col:
-            st.markdown(f"""
-            <div class="policy-card" style="border: 2px solid {border_color};">
-                <div>
-                    <div>
-                        <span class="{badge_cls}">{name} Policy</span>
-                        {winner_html}
-                    </div>
-                    <div style="font-size: 0.78rem; color: #9CA3AF; margin-top: 4px;">{badge_desc}</div>
-                    <div class="summary-box">
-                        "{d['summary']}"
-                    </div>
-                </div>
-                <div>
-                    <div class="metric-row">
-                        <span style="color: #9CA3AF;">Reward Score $r_\\phi(x, y)$:</span>
-                        <span style="font-weight: 700; font-size: 1.05rem; color: {'#34D399' if d['score'] >= results['SFT']['score'] else '#F87171'};">
-                            {d['score']:+.4f} <span style="font-size: 0.75rem; font-weight: normal;">{delta_str}</span>
-                        </span>
-                    </div>
-                    <div class="metric-row">
-                        <span style="color: #9CA3AF;">Length:</span>
-                        <span><b>{d['length']}</b> tokens</span>
-                    </div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            with st.container(border=True):
+                # Header row
+                c_title, c_badge = st.columns([2, 1])
+                with c_title:
+                    st.markdown(f"#### :{meta['color']}[{name} Policy]")
+                with c_badge:
+                    if is_winner:
+                        st.markdown("🏆 **Top Score**")
+
+                st.caption(meta["desc"])
+
+                # Generated summary
+                st.info(f"“{d['summary']}”")
+
+                # Metrics
+                st.divider()
+                if name == "SFT":
+                    st.metric(
+                        label="Reward Model Score r_φ(x, y)",
+                        value=f"{d['score']:+.4f}",
+                        help="Score from frozen Bradley-Terry reward model",
+                    )
+                else:
+                    st.metric(
+                        label="Reward Model Score r_φ(x, y)",
+                        value=f"{d['score']:+.4f}",
+                        delta=f"{delta_sft:+.4f} vs SFT",
+                        help="Score from frozen Bradley-Terry reward model and difference vs SFT",
+                    )
+
+                st.caption(f"📏 Summary Length: **{d['length']}** tokens")
 
 # -----------------------------------------------------------------------------
 # Deep Dive Explanation Tabs
 # -----------------------------------------------------------------------------
-st.markdown("---")
+st.divider()
 tab1, tab2, tab3 = st.tabs(["🔬 Methodology & Math", "📈 Empirical Insights", "💬 Viva Discussion Points"])
 
 with tab1:
