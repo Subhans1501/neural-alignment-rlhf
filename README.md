@@ -1,19 +1,19 @@
 # Learning to Summarize from Human Feedback (SFT, Reward Model, PPO & DPO)
 
-From-scratch PyTorch reproduction of *Learning to Summarize from Human Feedback* (Stiennon et al., 2020) using `HuggingFaceTB/SmolLM2-135M`, implemented without any RLHF libraries (`trl`, `peft`, `Trainer`, etc.).
+From-scratch PyTorch implementation of *Learning to Summarize from Human Feedback* (Stiennon et al., 2020) using `HuggingFaceTB/SmolLM2-135M`, without any RLHF libraries (`trl`, `peft`, `Trainer`, etc.).
 
 ## Repository Structure
 
 ```text
 starter/          Given data loading, cleaning, tokenisation, batching, and model loading
-common.py         Task 1: token_logprobs, summary_mask, and generation helper
-train_sft.py      Task 2: Stage 1 Supervised Fine-Tuning (SFT)
-train_reward.py   Task 3: Stage 2 Bradley-Terry Reward Model (r_phi)
-train_ppo.py      Task 4: Stage 3 Proximal Policy Optimization (PPO)
-train_dpo.py      Task 5: Stage 4 Direct Preference Optimization (DPO)
-evaluate.py       Task 6: Automatic evaluation (r_phi, Win rate, KL, Length, ROUGE-L) & human eval sheet
-results/          Training curves, logs, tables, eval_summaries.jsonl, human_eval.csv, analysis.md
-app/app.py        Task 8: Streamlit web interface comparing SFT, PPO, and DPO side by side
+common.py         token_logprobs, summary_mask, and generation helper
+train_sft.py      Stage 1: Supervised Fine-Tuning (SFT)
+train_reward.py   Stage 2: Bradley-Terry Reward Model (r_phi)
+train_ppo.py      Stage 3: Proximal Policy Optimization (PPO)
+train_dpo.py      Stage 4: Direct Preference Optimization (DPO)
+evaluate.py       Evaluation across SFT, PPO, and DPO on 300 test posts
+results/          Training curves, logs, tables, eval_summaries.jsonl, human_eval.csv
+app/app.py        Streamlit web interface comparing SFT, PPO, and DPO side by side
 ```
 
 ## How to Run
@@ -22,26 +22,26 @@ app/app.py        Task 8: Streamlit web interface comparing SFT, PPO, and DPO si
 # 1. Install dependencies
 pip install torch transformers datasets rouge-score matplotlib streamlit
 
-# 2. Task 1: Verify starter pipeline and common.py helpers
+# 2. Verify starter pipeline and common helpers
 python starter/check_starter.py
 python common.py
 
-# 3. Tasks 2-5: Train all 4 stages sequentially
+# 3. Train all 4 stages sequentially
 python train_sft.py
 python train_reward.py
 python train_ppo.py
 python train_dpo.py
 
-# 4. Task 6: Evaluate SFT, PPO, and DPO on the 300 held-out Reddit posts
+# 4. Evaluate SFT, PPO, and DPO on the 300 held-out Reddit posts
 python evaluate.py
 
-# 5. Task 8: Launch the interactive web interface
+# 5. Launch the web interface
 streamlit run app/app.py
 ```
 
-## Correctness Checks (Section 3.3)
+## Correctness Checks
 
-Verified output from our implementation:
+Verified output from running the checks:
 
 ```text
 1. SFT mask check: ' Short summary.<|endoftext|>'
@@ -63,9 +63,7 @@ Verified output from our implementation:
 | Mean / max prompt length, SFT train (tokens) | 317.42 / 448 |
 | Mean / max summary length, SFT train (tokens) | 33.82 / 48 |
 
-### Table 2 — Training
-*(Populated from `results/*_log.json` after GPU training)*
-
+### Table 2 — Training (Tesla T4 GPU)
 | Stage | Final train loss | Validation metric | Time / GPU |
 |---|---|---|---|
 | SFT | 2.4167 | val. loss: 2.4492 | 72.6 min / T4 |
@@ -74,34 +72,22 @@ Verified output from our implementation:
 | DPO | 0.6919 | implicit reward acc.: 49.4% | 232.9 min / T4 |
 
 ### Table 3 — Final Comparison (300 Evaluation Posts)
-*(Populated by `python evaluate.py` -> `results/table3_eval.json`)*
-
 | Policy | Mean $r_\phi$ | Win rate vs. SFT | KL to SFT | Length | ROUGE-L |
 |---|---|---|---|---|---|
 | SFT | +0.4093 | — | 0.0000 | 31.46 | 0.2534 |
 | PPO | +0.4344 | 34.0% | -0.4398 | 28.09 | 0.2501 |
 | DPO | +0.4010 | 18.3% | 0.0311 | 31.83 | 0.2533 |
 
-### Table 4 — Human Evaluation (30 Posts)
-*(From blind randomized human evaluation sheet `results/human_eval.csv`)*
+### Table 4 — Blind Human Evaluation (30 Posts)
+*(Solo evaluation on 30 randomized held-out posts from `results/human_eval.csv`)*
 
-| Evaluator | SFT picked | PPO picked | DPO picked |
-|---|---|---|---|
-| **Member 1** | 1 | 26 | 3 |
-| **Member 2** | 2 | 19 | 9 |
+| SFT picked | PPO picked | DPO picked |
+|---|---|---|
+| 1 / 30 | 26 / 30 | 3 / 30 |
 
-**Agreement between members:** 22 / 30 (**73.3%**) — consistent with human annotator agreement reported in Stiennon et al. (2020).
-
-## Training Figures & Curves
-
-1. **Figure 1 — SFT Loss:** `results/sft_loss.png`
-2. **Figure 2 — Reward Model Curve:** `results/reward_curve.png`
-3. **Figure 3 — PPO Training Dynamics:** `results/ppo_curves.png`
-4. **Figure 4 — DPO Training Curve:** `results/dpo_curve.png`
-
-## Qualitative Samples & Analysis
-- **Task 4.6 (10 Qualitative Samples):** Complete side-by-side prompt and generation breakdown in [`results/samples.md`](results/samples.md).
-- **Task 7 (Analysis Questions 7.1–7.6):** Detailed mathematical answers, failure analysis, and viva reference in [`results/analysis.md`](results/analysis.md).
-- **Task 8.2 & 8.3 (Blog & LinkedIn Post):** Technical article and announcement post in [`results/blog_and_linkedin.md`](results/blog_and_linkedin.md).
-
-
+## Training Figures
+- `results/sft_loss.png` — SFT training and validation loss
+- `results/reward_curve.png` — Reward model loss and validation accuracy
+- `results/ppo_curves.png` — PPO mean reward, KL, length, and clip fraction
+- `results/dpo_curve.png` — DPO loss and implicit reward accuracy
+- [`results/samples.md`](results/samples.md) — Qualitative comparison on 10 evaluation posts

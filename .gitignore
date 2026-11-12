@@ -180,10 +180,14 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
-# Model checkpoints & assignment manual
+# Model checkpoints, archives, and local notes/scripts
 checkpoints/
+*.zip
 *.pt
 *.pth
 *.bin
 *.safetensors
 assignment03-GENAI.pdf
+update_report.py
+results/blog_and_linkedin.md
+results/analysis.md
