@@ -111,8 +111,6 @@ with st.sidebar:
         "| Human Picks | 1-2 / 30 | **19-26 / 30** | 3-9 / 30 |"
     )
     st.caption("Agreement between two evaluators: 22 / 30 (73.3%).")
-    st.divider()
-    st.markdown("[GitHub Repo](https://github.com/Subhans1501/neural-alignment-rlhf)")
 
 preset = st.selectbox("Sample post", ["Custom"] + list(PRESETS.keys()))
 default_text = PRESETS[preset] if preset != "Custom" else next(iter(PRESETS.values()))
