@@ -95,14 +95,11 @@ def main():
             loss_half, _, _ = dpo_step(policy, ref_model, sub, device)
             (loss_half * 0.5).backward()
             step_loss += loss_half.item() * 0.5
-
         if step == 1:
             print(f"Step 1 DPO loss: {step_loss:.4f} (expected ~0.6931)")
-
         torch.nn.utils.clip_grad_norm_(policy.parameters(), 1.0)
         optimizer.step()
         running_loss += step_loss
-
         if step % 250 == 0:
             avg_loss = running_loss / 250
             acc = evaluate_dpo(policy, ref_model, val_loader, device)
@@ -111,10 +108,8 @@ def main():
             val_accs.append(acc)
             print(f"Step {step:4d} | loss: {avg_loss:.4f} | implicit_acc: {acc:.4f} | {time.time() - start_time:.1f}s")
             running_loss = 0.0
-
     policy.save_pretrained("checkpoints/dpo")
     tok.save_pretrained("checkpoints/dpo")
-
     fig, ax1 = plt.subplots(figsize=(6, 4))
     ax2 = ax1.twinx()
     ax1.plot(steps, losses, "-o", color="C0")
@@ -132,7 +127,5 @@ def main():
             f,
             indent=2,
         )
-
-
 if __name__ == "__main__":
     main()
