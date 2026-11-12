@@ -20,8 +20,6 @@ from common import (
 )
 from config import MAX_SUMMARY_TOKENS, SEED
 from train_reward import RewardModel
-
-
 class ActorCritic(nn.Module):
     def __init__(self, sft_path="checkpoints/sft"):
         super().__init__()
@@ -148,7 +146,6 @@ def main():
                 f"Iter {it:3d} | r: {entry['mean_r']:+.3f} | KL: {entry['mean_kl']:.4f} "
                 f"| len: {entry['mean_len']:.1f} | clip: {entry['clip_frac']:.3f}"
             )
-
     ac.policy.save_pretrained("checkpoints/ppo")
     tok.save_pretrained("checkpoints/ppo")
 
@@ -162,7 +159,5 @@ def main():
         ax.set_title(key)
     plt.tight_layout()
     plt.savefig("results/ppo_curves.png", dpi=150)
-
-
 if __name__ == "__main__":
     main()
