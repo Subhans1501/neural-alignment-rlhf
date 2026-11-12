@@ -189,5 +189,6 @@ checkpoints/
 *.safetensors
 assignment03-GENAI.pdf
 update_report.py
+upload_to_hf.py
 results/blog_and_linkedin.md
 results/analysis.md
