@@ -15,6 +15,7 @@ from train_reward import RewardModel
 st.set_page_config(
     page_title="TL;DR Summarizer — SFT vs PPO vs DPO",
     layout="wide",
+    initial_sidebar_state="collapsed",
 )
 
 # Optional: set your Hugging Face repo ID here (e.g. "Subhans1501/smollm2-rlhf-tldr")
@@ -98,19 +99,6 @@ st.markdown(
     '</div>',
     unsafe_allow_html=True,
 )
-
-with st.sidebar:
-    st.subheader("Eval Summary (300 Posts)")
-    st.markdown(
-        "| Metric | SFT | PPO | DPO |\n"
-        "| :--- | :---: | :---: | :---: |\n"
-        "| Mean Reward | +0.409 | **+0.434** | +0.401 |\n"
-        "| Win vs SFT | - | **34.0%** | 18.3% |\n"
-        "| ROUGE-L | 0.253 | 0.250 | 0.253 |\n"
-        "| Avg Tokens | 31.5 | **28.1** | 31.8 |\n"
-        "| Human Picks | 1-2 / 30 | **19-26 / 30** | 3-9 / 30 |"
-    )
-    st.caption("Agreement between two evaluators: 22 / 30 (73.3%).")
 
 preset = st.selectbox("Sample post", ["Custom"] + list(PRESETS.keys()))
 default_text = PRESETS[preset] if preset != "Custom" else next(iter(PRESETS.values()))
