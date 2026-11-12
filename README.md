@@ -79,7 +79,7 @@ Verified output from running the checks:
 | DPO | +0.4010 | 18.3% | 0.0311 | 31.83 | 0.2533 |
 
 ### Table 4 — Blind Human Evaluation (30 Posts)
-*(Solo evaluation on 30 randomized held-out posts from `results/human_eval.csv`)*
+*(`results/human_eval.csv`)*
 
 | SFT picked | PPO picked | DPO picked |
 |---|---|---|
