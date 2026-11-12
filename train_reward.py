@@ -13,7 +13,6 @@ from torch.utils.data import DataLoader
 from batching import collate_pref
 from common import load_causal_lm, load_preference_splits, load_tokenizer
 
-
 class RewardModel(nn.Module):
     def __init__(self, sft_path="checkpoints/sft"):
         super().__init__()
@@ -41,8 +40,6 @@ class RewardModel(nn.Module):
         state = torch.load(os.path.join(path, "reward_model.pt"), map_location=device)
         rm.load_state_dict(state)
         return rm.to(device)
-
-
 @torch.no_grad()
 def evaluate_rm(rm, loader, device):
     rm.eval()
@@ -53,15 +50,12 @@ def evaluate_rm(rm, loader, device):
         correct += (r_chosen > r_rejected).sum().item()
     rm.train()
     return correct / len(loader.dataset)
-
-
 def main():
     os.makedirs("checkpoints/reward", exist_ok=True)
     os.makedirs("results", exist_ok=True)
 
     tok = load_tokenizer()
     pref_train, pref_val = load_preference_splits(tok)
-
     train_loader = DataLoader(
         pref_train,
         batch_size=8,
@@ -108,9 +102,7 @@ def main():
             val_accs.append(acc)
             print(f"Step {step:4d} | loss: {avg_loss:.4f} | val_acc: {acc:.4f} | {time.time() - start_time:.1f}s")
             running_loss = 0.0
-
     rm.save("checkpoints/reward")
-
     fig, ax1 = plt.subplots(figsize=(6, 4))
     ax2 = ax1.twinx()
     ax1.plot(steps, losses, "-o", color="C0")
@@ -121,14 +113,11 @@ def main():
     plt.title("Reward Model")
     plt.tight_layout()
     plt.savefig("results/reward_curve.png", dpi=150)
-
     with open("results/reward_log.json", "w") as f:
         json.dump(
             {"steps": steps, "loss": losses, "val_acc": val_accs, "time": time.time() - start_time},
             f,
             indent=2,
         )
-
-
 if __name__ == "__main__":
     main()
