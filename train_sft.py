@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import torch
 from torch.optim import AdamW
 from torch.utils.data import DataLoader
-
 from common import (
     collate_sft,
     generate_summaries,
@@ -18,16 +17,12 @@ from common import (
     summary_mask,
     token_logprobs,
 )
-
-
 def sft_loss(model, batch, device):
     ids = batch["input_ids"].to(device)
     attn = batch["attention_mask"].to(device)
     lp = token_logprobs(model, ids, attn)
     mask = summary_mask(attn, batch["prompt_lens"])
     return -(lp * mask).sum() / mask.sum()
-
-
 @torch.no_grad()
 def evaluate(model, loader, device):
     model.eval()
@@ -36,8 +31,6 @@ def evaluate(model, loader, device):
         total += sft_loss(model, batch, device).item()
     model.train()
     return total / len(loader)
-
-
 def main():
     os.makedirs("checkpoints/sft", exist_ok=True)
     os.makedirs("results", exist_ok=True)
@@ -77,8 +70,6 @@ def main():
         attn = batch["attention_mask"].to(device)
         mask = summary_mask(attn, batch["prompt_lens"])
         total_tokens = mask.sum()
-
-        # Split batch of 16 into two micro-batches of 8 so it fits on a 15GB T4
         step_loss = 0.0
         for sl in (slice(0, 8), slice(8, 16)):
             lp = token_logprobs(model, ids[sl], attn[sl])
@@ -131,7 +122,5 @@ def main():
             f,
             indent=2,
         )
-
-
 if __name__ == "__main__":
     main()
