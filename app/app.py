@@ -18,9 +18,8 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# Optional: set your Hugging Face repo ID here (e.g. "Subhans1501/smollm2-rlhf-tldr")
-# so the app downloads checkpoints automatically if checkpoints/ is not present locally.
-HF_REPO_ID = os.environ.get("HF_REPO_ID", "")
+# Hugging Face model repository ID to load checkpoints from
+HF_REPO_ID = os.environ.get("HF_REPO_ID", "subhan1501/smollm2-rlhf-summarizer")
 
 st.markdown("""
 <style>
@@ -45,13 +44,21 @@ st.markdown("""
 
 
 def ensure_checkpoints():
-    if os.path.exists("checkpoints/sft") and os.path.exists("checkpoints/reward/reward_model.pt"):
+    required_paths = [
+        "checkpoints/sft/model.safetensors",
+        "checkpoints/reward/reward_model.pt",
+        "checkpoints/ppo/model.safetensors",
+        "checkpoints/dpo/model.safetensors",
+    ]
+    if all(os.path.exists(p) for p in required_paths):
         return
     if not HF_REPO_ID:
         st.error("Checkpoints not found in `checkpoints/`. Put your trained folders there or set `HF_REPO_ID`.")
         st.stop()
-    from huggingface_hub import snapshot_download
-    snapshot_download(repo_id=HF_REPO_ID, local_dir="checkpoints")
+    with st.spinner(f"Downloading model checkpoints from Hugging Face ({HF_REPO_ID})..."):
+        from huggingface_hub import snapshot_download
+        os.makedirs("checkpoints", exist_ok=True)
+        snapshot_download(repo_id=HF_REPO_ID, local_dir="checkpoints")
 
 
 @st.cache_resource(show_spinner="Loading SFT, PPO, DPO, and Reward checkpoints...")
