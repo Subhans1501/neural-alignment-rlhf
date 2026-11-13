@@ -12,7 +12,7 @@ train_reward.py   Stage 2: Bradley-Terry Reward Model (r_phi)
 train_ppo.py      Stage 3: Proximal Policy Optimization (PPO)
 train_dpo.py      Stage 4: Direct Preference Optimization (DPO)
 evaluate.py       Evaluation across SFT, PPO, and DPO on 300 test posts
-results/          Training curves, logs, tables, eval_summaries.jsonl, human_eval.csv
+results/          Training curves, logs, tables, eval_summaries.jsonl
 app/app.py        Streamlit web interface comparing SFT, PPO, and DPO side by side
 ```
 
@@ -78,16 +78,8 @@ Verified output from running the checks:
 | PPO | +0.4344 | 34.0% | -0.4398 | 28.09 | 0.2501 |
 | DPO | +0.4010 | 18.3% | 0.0311 | 31.83 | 0.2533 |
 
-### Table 4 — Blind Human Evaluation (30 Posts)
-*(`results/human_eval.csv`)*
-
-| SFT picked | PPO picked | DPO picked |
-|---|---|---|
-| 1 / 30 | 26 / 30 | 3 / 30 |
-
 ## Training Figures
 - `results/sft_loss.png` — SFT training and validation loss
 - `results/reward_curve.png` — Reward model loss and validation accuracy
 - `results/ppo_curves.png` — PPO mean reward, KL, length, and clip fraction
 - `results/dpo_curve.png` — DPO loss and implicit reward accuracy
-- [`results/samples.md`](results/samples.md) — Qualitative comparison on 10 evaluation posts
